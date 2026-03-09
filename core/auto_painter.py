@@ -57,6 +57,10 @@ class PaintCancelled(Exception):
     """在绘画过程中用户主动取消。"""
 
 
+SCALE_EPSILON = 1e-6
+CANCEL_CHECK_INTERVAL = 0.1
+
+
 def sketch_to_contours(sketch_u8, config: PainterConfig):
     # 找白色线条的轮廓：需要白为前景
     _, bin_img = cv2.threshold(sketch_u8, 127, 255, cv2.THRESH_BINARY)
@@ -92,8 +96,8 @@ def _dist2(a, b):
     return dx * dx + dy * dy
 
 
-def _scale_draw_rect(draw_rect, canvas_rect, scale: float):
-    if abs(scale - 1.0) < 1e-6:
+def _scale_and_center_draw_rect(draw_rect, canvas_rect, scale: float):
+    if abs(scale - 1.0) < SCALE_EPSILON:
         return draw_rect
 
     draw_left, draw_top, draw_w, draw_h = draw_rect
@@ -170,7 +174,7 @@ def draw_strokes_in_paint(
     draw_rect = compute_aspect_fit_rect(
         img_w, img_h, canvas_left, canvas_top, canvas_w, canvas_h, padding=2
     )
-    draw_left, draw_top, draw_w, draw_h = _scale_draw_rect(
+    draw_left, draw_top, draw_w, draw_h = _scale_and_center_draw_rect(
         draw_rect, canvas_rect, config.canvas_scale
     )
     print(f"等比绘制区域：left={draw_left} top={draw_top} w={draw_w} h={draw_h}")
@@ -314,10 +318,11 @@ class AutoPainter:
         while time.time() < end_at:
             if self._should_stop():
                 raise PaintCancelled("cancelled")
-            time.sleep(0.1)
+            remaining = end_at - time.time()
+            time.sleep(min(CANCEL_CHECK_INTERVAL, max(0.0, remaining)))
 
     def start(self, progress_callback: Optional[Callable[[int], None]] = None):
-        cb = progress_callback or (lambda *_: None)
+        cb = progress_callback or (lambda _: None)
         cb(0)
 
         if self.config.start_delay_sec:
@@ -328,7 +333,7 @@ class AutoPainter:
         if sketch is None:
             raise ValueError("无法读取线稿文件，请确认路径有效。")
 
-        img_h, img_w = sketch.shape[:2]
+        img_h, img_w = sketch.shape[:2]  # (height, width)
 
         paths = sketch_to_contours(sketch, self.config)
         print(f"提取到路径数：{len(paths)}（越多绘制越慢）")
