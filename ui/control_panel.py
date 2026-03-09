@@ -5,12 +5,13 @@ from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGroupBox,
     QPushButton, QLabel, QSlider, QComboBox,
     QFileDialog, QSpinBox, QCheckBox, QProgressBar,
-    QScrollArea, QFrame
+    QScrollArea, QFrame, QRadioButton, QButtonGroup
 )
 from PyQt5.QtCore import Qt, pyqtSignal, QThread
 from PyQt5.QtGui import QPixmap
 
 from ui.i18n import i18n
+from ui.text_panel import TextPanel
 
 
 class SketchWorker(QThread):
@@ -78,6 +79,9 @@ class ControlPanel(QWidget):
     painting_progress = pyqtSignal(int)
     status_message = pyqtSignal(str)
 
+    # 新增：通知主窗口保存历史
+    history_entry = pyqtSignal(str, str, str, dict)  # sketch_path, source_path, style, params
+
     STYLE_KEYS = [
         ("pencil",  "style_pencil"),
         ("pen",     "style_pen"),
@@ -92,10 +96,9 @@ class ControlPanel(QWidget):
         self._image_path = None
         self._sketch_data = None
         self._paint_worker = None
+        self._paint_mode = "sketch"  # "sketch" 或 "text"
 
         self._init_ui()
-
-        # 监听语言变化
         i18n.language_changed.connect(self._retranslate)
 
     def _init_ui(self):
@@ -139,7 +142,6 @@ class ControlPanel(QWidget):
         self.combo_style = QComboBox()
         style_layout.addWidget(self.combo_style)
 
-        # AI 选项
         self.ai_options = QWidget()
         ai_layout = QVBoxLayout(self.ai_options)
         ai_layout.setContentsMargins(0, 4, 0, 0)
@@ -230,6 +232,33 @@ class ControlPanel(QWidget):
         self.grp_paint = QGroupBox()
         paint_layout = QVBoxLayout()
 
+        # 模式切换：画线稿 / 写字
+        self.lbl_paint_mode = QLabel()
+        paint_layout.addWidget(self.lbl_paint_mode)
+
+        mode_row = QHBoxLayout()
+        self.radio_sketch = QRadioButton()
+        self.radio_sketch.setChecked(True)
+        self.radio_text = QRadioButton()
+
+        self.mode_group = QButtonGroup(self)
+        self.mode_group.addButton(self.radio_sketch, 0)
+        self.mode_group.addButton(self.radio_text, 1)
+        self.mode_group.buttonClicked.connect(self._on_mode_changed)
+
+        mode_row.addWidget(self.radio_sketch)
+        mode_row.addWidget(self.radio_text)
+        mode_row.addStretch()
+        paint_layout.addLayout(mode_row)
+
+        # 写字面板（默认隐藏）
+        self.text_panel = TextPanel()
+        self.text_panel.setVisible(False)
+        self.text_panel.text_rendered.connect(self._on_text_rendered)
+        self.text_panel.status_message.connect(lambda msg: self.status_message.emit(msg))
+        paint_layout.addWidget(self.text_panel)
+
+        # 绘画速度
         self.lbl_speed = QLabel()
         paint_layout.addWidget(self.lbl_speed)
         self.slider_speed = QSlider(Qt.Horizontal)
@@ -244,6 +273,7 @@ class ControlPanel(QWidget):
             lambda v: self.lbl_speed_val.setText(str(v))
         )
 
+        # 起笔延迟
         self.lbl_delay = QLabel()
         paint_layout.addWidget(self.lbl_delay)
         self.spin_delay = QSpinBox()
@@ -251,6 +281,7 @@ class ControlPanel(QWidget):
         self.spin_delay.setValue(5)
         paint_layout.addWidget(self.spin_delay)
 
+        # 画布缩放
         self.lbl_scale = QLabel()
         paint_layout.addWidget(self.lbl_scale)
         self.slider_scale = QSlider(Qt.Horizontal)
@@ -265,10 +296,12 @@ class ControlPanel(QWidget):
             lambda v: self.lbl_scale_val.setText(f"{v}%")
         )
 
+        # 进度条
         self.progress_bar = QProgressBar()
         self.progress_bar.setValue(0)
         paint_layout.addWidget(self.progress_bar)
 
+        # 按钮
         btn_row = QHBoxLayout()
         self.btn_start_paint = QPushButton()
         self.btn_start_paint.setObjectName("successButton")
@@ -307,7 +340,6 @@ class ControlPanel(QWidget):
             self.lbl_thumbnail.setText(i18n.t("lbl_drop_hint"))
 
         self.grp_style.setTitle(i18n.t("group_style"))
-        # 重新填充风格下拉（保持当前选中）
         current_idx = self.combo_style.currentIndex()
         self.combo_style.blockSignals(True)
         self.combo_style.clear()
@@ -333,12 +365,32 @@ class ControlPanel(QWidget):
         self.btn_save.setText(i18n.t("btn_save"))
 
         self.grp_paint.setTitle(i18n.t("group_paint"))
+        self.lbl_paint_mode.setText(i18n.t("lbl_paint_mode"))
+        self.radio_sketch.setText(i18n.t("radio_draw_sketch"))
+        self.radio_text.setText(i18n.t("radio_write_text"))
         self.lbl_speed.setText(i18n.t("lbl_speed"))
         self.lbl_delay.setText(i18n.t("lbl_delay"))
         self.spin_delay.setSuffix(i18n.t("suffix_seconds"))
         self.lbl_scale.setText(i18n.t("lbl_scale"))
         self.btn_start_paint.setText(i18n.t("btn_start_paint"))
         self.btn_stop_paint.setText(i18n.t("btn_stop_paint"))
+
+    # ──────────── 模式切换 ────────────
+
+    def _on_mode_changed(self, button):
+        mode_id = self.mode_group.id(button)
+        if mode_id == 0:
+            self._paint_mode = "sketch"
+            self.text_panel.setVisible(False)
+        else:
+            self._paint_mode = "text"
+            self.text_panel.setVisible(True)
+
+    def _on_text_rendered(self, path: str):
+        """写字模式下，文字渲染完成后当作线稿数据"""
+        self._sketch_data = path
+        self.btn_start_paint.setEnabled(True)
+        self.sketch_generated.emit(path)
 
     # ──────────── 槽函数 ────────────
 
@@ -388,11 +440,13 @@ class ControlPanel(QWidget):
         self.status_message.emit(i18n.t("status_generating"))
 
         self._sketch_worker = SketchWorker(self._image_path, style_key, params)
-        self._sketch_worker.finished.connect(self._on_sketch_done)
+        self._sketch_worker.finished.connect(
+            lambda result: self._on_sketch_done(result, style_key, params)
+        )
         self._sketch_worker.error.connect(self._on_sketch_error)
         self._sketch_worker.start()
 
-    def _on_sketch_done(self, result):
+    def _on_sketch_done(self, result, style_key, params):
         self._sketch_data = result
         self.btn_generate.setEnabled(True)
         self.btn_generate.setText(i18n.t("btn_generate"))
@@ -400,6 +454,12 @@ class ControlPanel(QWidget):
         self.btn_start_paint.setEnabled(True)
         self.sketch_generated.emit(result)
         self.status_message.emit(i18n.t("status_generate_done"))
+
+        # 通知保存到历史记录
+        style_display = i18n.t(f"style_{style_key}") if i18n.t(f"style_{style_key}") != f"style_{style_key}" else style_key
+        source = self._image_path or ""
+        if isinstance(result, str):
+            self.history_entry.emit(result, source, style_display, params)
 
     def _on_sketch_error(self, error_msg):
         self.btn_generate.setEnabled(True)
@@ -414,7 +474,7 @@ class ControlPanel(QWidget):
             i18n.t("dialog_save_filter")
         )
         if path:
-            # TODO: 调用你的保存���口
+            # TODO: 调用你的保存接口
             # from core.sketch_generator import save_sketch
             # save_sketch(self._sketch_data, path)
             self.status_message.emit(i18n.t("status_saved", path))
@@ -422,11 +482,13 @@ class ControlPanel(QWidget):
     def _on_start_painting(self):
         if not self._sketch_data:
             return
+    
 
         paint_params = {
             "speed": self.slider_speed.value(),
             "delay": self.spin_delay.value(),
             "scale": self.slider_scale.value() / 100.0,
+            "mode": self._paint_mode,
         }
 
         self.btn_start_paint.setEnabled(False)

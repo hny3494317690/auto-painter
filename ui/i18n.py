@@ -82,12 +82,48 @@ TRANSLATIONS = {
 
         # 控制面板 - 绘画控制
         "group_paint": "🖱️ 自动绘画控制",
+        "lbl_paint_mode": "绘画模式:",
+        "radio_draw_sketch": "🖼️ 画线稿",
+        "radio_write_text": "✍️ 写字",
         "lbl_speed": "绘画速度:",
         "lbl_delay": "起笔延迟 (秒):",
         "suffix_seconds": " 秒",
         "lbl_scale": "画布缩放:",
         "btn_start_paint": "▶ 开始绘画",
         "btn_stop_paint": "⏹ 停止",
+
+        # 写字模式
+        "group_text": "✍️ 写字设置",
+        "lbl_text_input": "输入文字:",
+        "placeholder_text": "在此输入要写的文字...",
+        "lbl_font": "字体:",
+        "lbl_font_size": "字号:",
+        "btn_preview_text": "预览文字",
+        "status_text_rendered": "文字渲染完成，可以开始绘画",
+        "status_text_empty": "请先输入要写的文字",
+
+        # 历史记录
+        "group_history": "📋 历史记录",
+        "history_empty": "暂无历史记录",
+        "history_menu_load": "加载此线稿",
+        "history_menu_paint": "直接绘画",
+        "history_menu_export": "导出图片",
+        "history_menu_delete": "删除",
+        "history_menu_clear": "清空所有历史",
+        "history_loaded": "已加载历史线稿",
+        "history_deleted": "已删除历史记录",
+        "history_cleared": "已清空所有历史记录",
+        "history_exported": "已导出: {}",
+        
+        "font_simsun": "宋体 (SimSun)",
+        "font_simhei": "黑体 (SimHei)",
+        "font_msyh": "微软雅黑 (Microsoft YaHei)",
+        "font_kaiti": "楷体 (KaiTi)",
+        "font_fangsong": "仿宋 (FangSong)",
+        "font_arial": "Arial",
+        "font_times": "Times New Roman",
+        "font_comic": "Comic Sans MS",
+        "font_courier": "Courier New",
 
         # 预览面板
         "tab_compare": "🔀 对比视图",
@@ -173,12 +209,48 @@ TRANSLATIONS = {
 
         # Control panel - Paint control
         "group_paint": "🖱️ Auto Paint Control",
+        "lbl_paint_mode": "Paint Mode:",
+        "radio_draw_sketch": "🖼️ Draw Sketch",
+        "radio_write_text": "✍️ Write Text",
         "lbl_speed": "Paint Speed:",
         "lbl_delay": "Start Delay (sec):",
         "suffix_seconds": " sec",
         "lbl_scale": "Canvas Scale:",
         "btn_start_paint": "▶ Start Painting",
         "btn_stop_paint": "⏹ Stop",
+
+        # Text mode
+        "group_text": "✍️ Text Settings",
+        "lbl_text_input": "Input Text:",
+        "placeholder_text": "Type text to write here...",
+        "lbl_font": "Font:",
+        "lbl_font_size": "Font Size:",
+        "btn_preview_text": "Preview Text",
+        "status_text_rendered": "Text rendered, ready to paint",
+        "status_text_empty": "Please enter text first",
+
+        "font_simsun": "SimSun",
+        "font_simhei": "SimHei",
+        "font_msyh": "Microsoft YaHei",
+        "font_kaiti": "KaiTi",
+        "font_fangsong": "FangSong",
+        "font_arial": "Arial",
+        "font_times": "Times New Roman",
+        "font_comic": "Comic Sans MS",
+        "font_courier": "Courier New",
+        
+        # History
+        "group_history": "📋 History",
+        "history_empty": "No history yet",
+        "history_menu_load": "Load Sketch",
+        "history_menu_paint": "Paint Directly",
+        "history_menu_export": "Export Image",
+        "history_menu_delete": "Delete",
+        "history_menu_clear": "Clear All History",
+        "history_loaded": "History sketch loaded",
+        "history_deleted": "History entry deleted",
+        "history_cleared": "All history cleared",
+        "history_exported": "Exported: {}",
 
         # Preview panel
         "tab_compare": "🔀 Compare View",
@@ -193,9 +265,7 @@ TRANSLATIONS = {
 
 
 class I18n(QObject):
-    """
-    全局单例翻译管理器。
-    """
+    """全局单例翻译管理器。"""
 
     language_changed = pyqtSignal(str)
 
@@ -208,8 +278,6 @@ class I18n(QObject):
         return cls._instance
 
     def __init__(self):
-        # 必须每次都调用 super().__init__()，QObject 需要它
-        # 但用 _qt_initialized 防止重复设置属性
         if not I18n._qt_initialized:
             super().__init__()
             I18n._qt_initialized = True
@@ -227,10 +295,6 @@ class I18n(QObject):
             self.language_changed.emit(lang_code)
 
     def t(self, key: str, *args) -> str:
-        """
-        获取翻译文本。
-        支持带占位符:  i18n.t("status_image_loaded", filename)
-        """
         text = TRANSLATIONS.get(self._language, {}).get(key)
         if text is None:
             text = TRANSLATIONS.get("zh_CN", {}).get(key, key)
