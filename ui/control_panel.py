@@ -27,14 +27,10 @@ class SketchWorker(QThread):
 
     def run(self):
         try:
-            # TODO: 调用你已实现的线稿生成接口
-            # from core.sketch_generator import generate_sketch
-            # result = generate_sketch(self.image_path, self.style, self.params)
-            # self.finished.emit(result)
+            from core.sketch_generator import generate_sketch
+            result = generate_sketch(self.image_path, self.style, self.params)
+            self.finished.emit(result)
 
-            import time
-            time.sleep(1)
-            self.finished.emit(self.image_path)
         except Exception as e:
             self.error.emit(str(e))
 
