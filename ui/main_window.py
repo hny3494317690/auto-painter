@@ -131,6 +131,7 @@ class MainWindow(QMainWindow):
         self.control_panel.status_message.connect(self._update_status)
         self.control_panel.notification_message.connect(self._show_tray_message)
         self.control_panel.history_entry.connect(self.history_panel.add_entry)
+        self.control_panel.settings_requested.connect(self._on_open_settings)
 
         self.history_panel.sketch_loaded.connect(self._on_history_loaded)
         self.history_panel.sketch_paint.connect(self._on_history_paint)

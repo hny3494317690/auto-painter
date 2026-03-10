@@ -120,6 +120,7 @@ TRANSLATIONS = {
         "history_deleted": "已删除历史记录",
         "history_cleared": "已清空所有历史记录",
         "history_exported": "已导出: {}",
+        "history_skipped_duplicate": "与已有记录相同，已跳过",
         
         "font_simsun": "宋体 (SimSun)",
         "font_simhei": "黑体 (SimHei)",
@@ -142,6 +143,7 @@ TRANSLATIONS = {
 
         # 设置对话框
         "menu_settings": "设置(&S)",
+        "btn_settings_open": "⚙️ 设置",
         "settings_title": "⚙️ 设置",
         "settings_tab_hotkeys": "⌨️ 快捷键",
         "settings_tab_ai": "🤖 AI 画图",
@@ -287,6 +289,7 @@ TRANSLATIONS = {
         "history_deleted": "History entry deleted",
         "history_cleared": "All history cleared",
         "history_exported": "Exported: {}",
+        "history_skipped_duplicate": "Skipped duplicate entry",
 
         # Preview panel
         "tab_compare": "🔀 Compare View",
@@ -299,6 +302,7 @@ TRANSLATIONS = {
 
         # Settings dialog
         "menu_settings": "&Settings",
+        "btn_settings_open": "⚙️ Settings",
         "settings_title": "⚙️ Settings",
         "settings_tab_hotkeys": "⌨️ Hotkeys",
         "settings_tab_ai": "🤖 AI Drawing",

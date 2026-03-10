@@ -3,8 +3,10 @@
 自动保存生成的线稿，提供浏览/加载/删除功能
 """
 import os
+import sys
 import json
 import shutil
+import hashlib
 from datetime import datetime
 
 from PyQt5.QtWidgets import (
@@ -40,6 +42,24 @@ def _save_index(entries: list):
     _ensure_history_dir()
     with open(HISTORY_INDEX, "w", encoding="utf-8") as f:
         json.dump(entries, f, ensure_ascii=False, indent=2)
+
+
+def _calc_file_hash(path: str) -> str:
+    """返回文件的 SHA-256 哈希用于去重；missing/error -> '' (Return '' on missing or errors)."""
+    if not path:
+        return ""
+    h = hashlib.sha256()
+    try:
+        with open(path, "rb") as f:
+            for chunk in iter(lambda: f.read(8192), b""):
+                h.update(chunk)
+        return h.hexdigest()
+    except FileNotFoundError:
+        return ""
+    except OSError as e:
+        # Keep lightweight stderr output to avoid introducing logging configuration in UI layer.
+        print(f"[history] Failed to hash {path}: {e}", file=sys.stderr)
+        return ""
 
 
 class HistoryCard(QFrame):
@@ -255,6 +275,29 @@ class HistoryPanel(QWidget):
         """
         _ensure_history_dir()
 
+        source_hash = _calc_file_hash(source_path)
+        needs_save = False
+        duplicate_found = False
+        for entry in self._entries:
+            entry_hash = entry.get("source_hash")
+            if not entry_hash:
+                entry_hash = _calc_file_hash(entry.get("source_path", ""))
+                if entry_hash:
+                    entry["source_hash"] = entry_hash
+                    needs_save = True
+            if entry.get("style") != style:
+                continue
+            if entry.get("params", {}) != params:
+                continue
+            if source_hash and entry_hash and source_hash == entry_hash:
+                duplicate_found = True
+                break
+        if duplicate_found:
+            if needs_save:
+                _save_index(self._entries)
+            self.status_message.emit(i18n.t("history_skipped_duplicate"))
+            return
+
         timestamp = datetime.now().isoformat()
         safe_name = datetime.now().strftime("%Y%m%d_%H%M%S")
 
@@ -293,6 +336,7 @@ class HistoryPanel(QWidget):
             "thumbnail": thumb_path,
             "style": style,
             "params": params,
+            "source_hash": source_hash,
             "time": timestamp,
         }
 
