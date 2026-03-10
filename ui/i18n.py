@@ -156,9 +156,10 @@ TRANSLATIONS = {
         "ai_prompt": "生成提示词:",
         "ai_preset_prompts": "预设提示词:",
         "ai_select_preset": "-- 选择预设 --",
-        "ai_api_url_hint_openai": "默认: https://api.openai.com/v1/images/edits",
+        "ai_api_url_hint_openai": "默认: https://api.openai.com/v1/images/generations",
         "ai_api_url_hint_sd": "默认: http://127.0.0.1:7860/sdapi/v1/img2img",
         "ai_api_url_hint_custom": "请输入自定义接口地址",
+        "ai_prompt_placeholder": "在此输入生成提示词...",
 
         # 历史还原
         "history_restored": "已还原历史记录的设置和图片",
@@ -312,9 +313,10 @@ TRANSLATIONS = {
         "ai_prompt": "Generation Prompt:",
         "ai_preset_prompts": "Preset Prompts:",
         "ai_select_preset": "-- Select Preset --",
-        "ai_api_url_hint_openai": "Default: https://api.openai.com/v1/images/edits",
+        "ai_api_url_hint_openai": "Default: https://api.openai.com/v1/images/generations",
         "ai_api_url_hint_sd": "Default: http://127.0.0.1:7860/sdapi/v1/img2img",
         "ai_api_url_hint_custom": "Enter custom API URL",
+        "ai_prompt_placeholder": "Enter your prompt here...",
 
         # History restore
         "history_restored": "Restored settings and images from history",

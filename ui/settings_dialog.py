@@ -120,7 +120,7 @@ class SettingsDialog(QDialog):
         prompt_layout.addWidget(self.lbl_prompt)
         self.edit_prompt = QTextEdit()
         self.edit_prompt.setMinimumHeight(100)
-        self.edit_prompt.setPlaceholderText("Enter your prompt here...")
+        self.edit_prompt.setPlaceholderText(i18n.t("ai_prompt_placeholder"))
         prompt_layout.addWidget(self.edit_prompt)
 
         self.grp_prompt.setLayout(prompt_layout)
@@ -189,6 +189,7 @@ class SettingsDialog(QDialog):
         self.grp_prompt.setTitle(i18n.t("ai_prompt"))
         self.lbl_preset.setText(i18n.t("ai_preset_prompts"))
         self.lbl_prompt.setText(i18n.t("ai_prompt"))
+        self.edit_prompt.setPlaceholderText(i18n.t("ai_prompt_placeholder"))
 
         self.btn_save.setText(i18n.t("settings_save"))
         self.btn_cancel.setText(i18n.t("settings_cancel"))

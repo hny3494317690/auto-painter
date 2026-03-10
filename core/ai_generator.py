@@ -130,15 +130,13 @@ class AIGenerator:
     # ──────────── OpenAI ────────────
 
     def _call_openai(self, img_path: str) -> bytes:
-        url = self.api_url or "https://api.openai.com/v1/images/edits"
+        url = self.api_url or "https://api.openai.com/v1/images/generations"
         if not self.api_key:
             raise RuntimeError("请在设置中填写 OpenAI API Key。")
 
-        img_b64 = _encode_image_base64(img_path)
         payload = json.dumps({
-            "model": "dall-e-2",
+            "model": "dall-e-3",
             "prompt": self.prompt,
-            "image": img_b64,
             "n": 1,
             "size": "1024x1024",
             "response_format": "b64_json",
@@ -153,7 +151,7 @@ class AIGenerator:
             },
             method="POST",
         )
-        return self._fetch(req)
+        return self._fetch(req, provider="openai")
 
     # ──────────── Stable Diffusion ────────────
 
@@ -221,7 +219,19 @@ class AIGenerator:
             if images:
                 return base64.b64decode(images[0])
 
-        # OpenAI / 自定义
+        # OpenAI images API
+        if provider == "openai":
+            result_data = data.get("data", [])
+            if result_data:
+                b64 = result_data[0].get("b64_json", "")
+                if b64:
+                    return base64.b64decode(b64)
+                img_url = result_data[0].get("url", "")
+                if img_url:
+                    with urllib_request.urlopen(img_url, timeout=self.timeout) as r:
+                        return r.read()
+
+        # Generic / custom response formats
         result_data = data.get("data", [])
         if result_data:
             b64 = result_data[0].get("b64_json", "")
