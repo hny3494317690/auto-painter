@@ -5,6 +5,7 @@
 import os
 import json
 import shutil
+import hashlib
 from datetime import datetime
 
 from PyQt5.QtWidgets import (
@@ -40,6 +41,19 @@ def _save_index(entries: list):
     _ensure_history_dir()
     with open(HISTORY_INDEX, "w", encoding="utf-8") as f:
         json.dump(entries, f, ensure_ascii=False, indent=2)
+
+
+def _calc_file_hash(path: str) -> str:
+    if not path or not os.path.isfile(path):
+        return ""
+    h = hashlib.sha256()
+    try:
+        with open(path, "rb") as f:
+            for chunk in iter(lambda: f.read(8192), b""):
+                h.update(chunk)
+        return h.hexdigest()
+    except OSError:
+        return ""
 
 
 class HistoryCard(QFrame):
@@ -255,6 +269,17 @@ class HistoryPanel(QWidget):
         """
         _ensure_history_dir()
 
+        source_hash = _calc_file_hash(source_path)
+        for entry in self._entries:
+            if entry.get("style") != style:
+                continue
+            if entry.get("params", {}) != params:
+                continue
+            existing_hash = entry.get("source_hash") or _calc_file_hash(entry.get("source_path", ""))
+            if source_hash and existing_hash and source_hash == existing_hash:
+                self.status_message.emit(i18n.t("history_skipped_duplicate"))
+                return
+
         timestamp = datetime.now().isoformat()
         safe_name = datetime.now().strftime("%Y%m%d_%H%M%S")
 
@@ -293,6 +318,7 @@ class HistoryPanel(QWidget):
             "thumbnail": thumb_path,
             "style": style,
             "params": params,
+            "source_hash": source_hash,
             "time": timestamp,
         }
 

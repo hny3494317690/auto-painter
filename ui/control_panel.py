@@ -16,6 +16,7 @@ from PyQt5.QtGui import QPixmap, QKeySequence
 
 from ui.i18n import i18n
 from ui.app_paths import SETTINGS_PATH
+from ui.settings_dialog import load_settings, save_settings
 from core.sketch_generator import SketchGenerator
 from core.auto_painter import AutoPainter, PainterConfig, PaintCancelled
 from ui.text_panel import TextPanel
@@ -119,6 +120,7 @@ class ControlPanel(QWidget):
 
     # 新增：通知主窗口保存历史
     history_entry = pyqtSignal(str, str, str, dict)  # sketch_path, source_path, style, params
+    settings_requested = pyqtSignal()
 
     STYLE_KEYS = [
         ("pencil",  "style_pencil"),
@@ -155,6 +157,16 @@ class ControlPanel(QWidget):
         container = QWidget()
         layout = QVBoxLayout(container)
         layout.setSpacing(12)
+
+        # ═══ 顶部操作 ═══
+        top_row = QHBoxLayout()
+        top_row.addStretch()
+        self.btn_settings = QPushButton("⚙️")
+        self.btn_settings.setObjectName("primaryButton")
+        self.btn_settings.setFixedHeight(34)
+        self.btn_settings.clicked.connect(self.settings_requested.emit)
+        top_row.addWidget(self.btn_settings)
+        layout.addLayout(top_row)
 
         # ═══ 图片选择 ═══
         self.grp_image = QGroupBox()
@@ -326,8 +338,23 @@ class ControlPanel(QWidget):
 
         self.lbl_draw_button = QLabel()
         paint_layout.addWidget(self.lbl_draw_button)
-        self.combo_draw_button = QComboBox()
-        paint_layout.addWidget(self.combo_draw_button)
+        draw_row = QHBoxLayout()
+        self.btn_draw_left = QPushButton()
+        self.btn_draw_left.setObjectName("segButton")
+        self.btn_draw_left.setCheckable(True)
+        self.btn_draw_right = QPushButton()
+        self.btn_draw_right.setObjectName("segButton")
+        self.btn_draw_right.setCheckable(True)
+        self.draw_button_group = QButtonGroup(self)
+        self.draw_button_group.setExclusive(True)
+        self.draw_button_group.addButton(self.btn_draw_left, 0)
+        self.draw_button_group.addButton(self.btn_draw_right, 1)
+        self.btn_draw_left.clicked.connect(lambda: self._on_draw_button_changed("left"))
+        self.btn_draw_right.clicked.connect(lambda: self._on_draw_button_changed("right"))
+        draw_row.addWidget(self.btn_draw_left)
+        draw_row.addWidget(self.btn_draw_right)
+        draw_row.addStretch()
+        paint_layout.addLayout(draw_row)
 
         # 进度条
         self.progress_bar = QProgressBar()
@@ -400,16 +427,12 @@ class ControlPanel(QWidget):
         self.radio_text.setText(i18n.t("radio_write_text"))
         self.lbl_speed.setText(i18n.t("lbl_speed"))
         self.lbl_draw_button.setText(i18n.t("lbl_draw_button"))
-        current_button = self.combo_draw_button.currentData()
-        self.combo_draw_button.blockSignals(True)
-        self.combo_draw_button.clear()
-        self.combo_draw_button.addItem(i18n.t("draw_button_left"), "left")
-        self.combo_draw_button.addItem(i18n.t("draw_button_right"), "right")
-        index = self.combo_draw_button.findData(current_button if current_button else "right")
-        self.combo_draw_button.setCurrentIndex(max(0, index))
-        self.combo_draw_button.blockSignals(False)
+        self.btn_settings.setText(i18n.t("btn_settings_open"))
+        self.btn_draw_left.setText(i18n.t("draw_button_left"))
+        self.btn_draw_right.setText(i18n.t("draw_button_right"))
         self.btn_start_paint.setText(i18n.t("btn_start_paint"))
         self.btn_stop_paint.setText(i18n.t("btn_stop_paint"))
+        self._load_draw_button_setting()
 
     # ──────────── 模式切换 ────────────
 
@@ -421,6 +444,22 @@ class ControlPanel(QWidget):
         else:
             self._paint_mode = "text"
             self.text_panel.setVisible(True)
+
+    def _load_draw_button_setting(self):
+        draw_button = self._get_paint_settings().get("draw_button", "right")
+        self._apply_draw_button(draw_button)
+
+    def _apply_draw_button(self, draw_button: str):
+        is_left = draw_button == "left"
+        self.btn_draw_left.setChecked(is_left)
+        self.btn_draw_right.setChecked(not is_left)
+
+    def _on_draw_button_changed(self, draw_button: str):
+        self._apply_draw_button(draw_button)
+        self._save_paint_settings(draw_button)
+
+    def _current_draw_button(self) -> str:
+        return "left" if self.btn_draw_left.isChecked() else "right"
 
     def _refresh_hotkeys(self):
         """根据设置文件中的快捷键配置更新快捷方式。"""
@@ -487,6 +526,23 @@ class ControlPanel(QWidget):
         except (json.JSONDecodeError, IOError, KeyError):
             pass
         return defaults
+
+    def _get_paint_settings(self) -> dict:
+        """从 settings.json 读取绘画相关配置。"""
+        settings = load_settings()
+        paint = settings.get("paint", {})
+        draw_button = paint.get("draw_button", "right")
+        if draw_button not in {"left", "right"}:
+            draw_button = "right"
+        return {"draw_button": draw_button}
+
+    def _save_paint_settings(self, draw_button: str):
+        """写入绘画相关配置。"""
+        settings = load_settings()
+        paint = settings.get("paint", {})
+        paint["draw_button"] = draw_button
+        settings["paint"] = paint
+        save_settings(settings)
 
     def _load_hotkey_settings(self):
         """从 settings.json 加载快捷键并刷新快捷方式。"""
@@ -676,7 +732,7 @@ class ControlPanel(QWidget):
 
         paint_params = {
             "speed": self.slider_speed.value(),
-            "draw_button": self.combo_draw_button.currentData() or "right",
+            "draw_button": self._current_draw_button(),
             "mode": self._paint_mode,
             "calibrate_start_key": self._hotkey_value_from_settings("calib_start", "f7"),
             "calibrate_end_key": self._hotkey_value_from_settings("calib_end", "f8"),

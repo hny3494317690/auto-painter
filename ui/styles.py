@@ -76,6 +76,25 @@ QPushButton#primaryButton:disabled {
     background-color: #a0c4e8;
 }
 
+/* 分段按钮 */
+QPushButton#segButton {
+    padding: 8px 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #ffffff;
+}
+
+QPushButton#segButton:hover {
+    border-color: #4a90d9;
+}
+
+QPushButton#segButton:checked {
+    background-color: #4a90d9;
+    color: #fff;
+    border-color: #4a90d9;
+    font-weight: bold;
+}
+
 /* 成功按钮 */
 QPushButton#successButton {
     background-color: #2ea44f;
