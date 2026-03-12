@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QSplitter, QAction, QActionGroup, QMessageBox, QSystemTrayIcon, QStyle, QDialog
 )
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 
 from ui.control_panel import ControlPanel
@@ -37,7 +37,6 @@ class MainWindow(QMainWindow):
         # 监听语言变化
         i18n.language_changed.connect(self._retranslate)
         self._retranslate()
-        QTimer.singleShot(0, self._show_first_launch_notice)
 
     # ──────────── 菜单栏 ────────────
 
@@ -206,6 +205,11 @@ class MainWindow(QMainWindow):
 
     def _update_status(self, message):
         self.statusBar().showMessage(message)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        if not self._notice_dialog_triggered:
+            self._show_first_launch_notice()
 
     def _show_tray_message(self,title: str, message: str,msec: int ):
         if not self._tray_icon or not QSystemTrayIcon.isSystemTrayAvailable():
