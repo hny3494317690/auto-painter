@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QSplitter, QAction, QActionGroup, QMessageBox, QSystemTrayIcon, QStyle, QDialog
 )
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QIcon
 
 from ui.control_panel import ControlPanel
@@ -37,6 +37,7 @@ class MainWindow(QMainWindow):
         # 监听语言变化
         i18n.language_changed.connect(self._retranslate)
         self._retranslate()
+        QTimer.singleShot(0, self._show_first_launch_notice)
 
     # ──────────── 菜单栏 ────────────
 
@@ -243,13 +244,10 @@ class MainWindow(QMainWindow):
 
     # ──────────── 启动提示 ────────────
 
-    def showEvent(self, event):
-        super().showEvent(event)
-        if not self._notice_checked:
-            self._notice_checked = True
-            self._show_first_launch_notice()
-
     def _show_first_launch_notice(self):
+        if self._notice_checked:
+            return
+        self._notice_checked = True
         settings = load_settings()
         if settings.get("notice_ack_version") == NOTICE_VERSION:
             return

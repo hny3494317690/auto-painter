@@ -47,6 +47,7 @@ class FirstLaunchDialog(QDialog):
         self._timer = QTimer(self)
         self._timer.timeout.connect(self._tick)
         self._timer.start(1000)
+        self._update_confirm_text()
 
         i18n.language_changed.connect(self._retranslate)
         self._retranslate()
@@ -56,17 +57,21 @@ class FirstLaunchDialog(QDialog):
         if self._seconds_left <= 0:
             self._timer.stop()
             self.btn_confirm.setEnabled(True)
-            self.btn_confirm.setText(i18n.t("welcome_confirm"))
+            self._update_confirm_text(force_enabled=True)
         else:
-            self.btn_confirm.setText(i18n.t("welcome_confirm_countdown", self._seconds_left))
+            self._update_confirm_text()
 
     def _retranslate(self, _lang=None):
         self.setWindowTitle(i18n.t("welcome_title"))
         self.lbl_content.setText(i18n.t("welcome_message"))
         self.lbl_hint.setText(i18n.t("welcome_hint"))
 
+        self._update_confirm_text()
+
+    def _update_confirm_text(self, force_enabled: bool = False):
+        if force_enabled:
+            self.btn_confirm.setEnabled(True)
         if self.btn_confirm.isEnabled():
             self.btn_confirm.setText(i18n.t("welcome_confirm"))
         else:
-            # 重置计时文本
             self.btn_confirm.setText(i18n.t("welcome_confirm_countdown", self._seconds_left))
