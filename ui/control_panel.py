@@ -722,9 +722,10 @@ class ControlPanel(QWidget):
             i18n.t("dialog_save_filter")
         )
         if path:
-            # TODO: 调用你的保存接口
-            # from core.sketch_generator import save_sketch
-            # save_sketch(self._sketch_data, path)
+            import shutil
+            if os.path.exists(self._sketch_data) and self._sketch_data != path:
+                shutil.copy2(self._sketch_data, path)
+
             self.status_message.emit(i18n.t("status_saved", path))
 
     def _on_start_painting(self):
