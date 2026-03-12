@@ -32,7 +32,7 @@ class MainWindow(QMainWindow):
         self._init_ui()
         self._init_statusbar()
         self._init_tray()
-        self._notice_checked = False
+        self._notice_dialog_triggered = False
 
         # 监听语言变化
         i18n.language_changed.connect(self._retranslate)
@@ -245,9 +245,9 @@ class MainWindow(QMainWindow):
     # ──────────── 启动提示 ────────────
 
     def _show_first_launch_notice(self):
-        if self._notice_checked:
+        if self._notice_dialog_triggered:
             return
-        self._notice_checked = True
+        self._notice_dialog_triggered = True
         settings = load_settings()
         if settings.get("notice_ack_version") == NOTICE_VERSION:
             return
