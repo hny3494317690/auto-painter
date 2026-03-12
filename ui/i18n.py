@@ -221,7 +221,7 @@ TRANSLATIONS = {
         ),
         "welcome_hint": "Please confirm below to continue using the app.",
         "welcome_confirm": "Got it",
-        # \"{}\" is a format placeholder that will be replaced with remaining seconds
+        # "{}" is a format placeholder that will be replaced with remaining seconds
         "welcome_confirm_countdown": "Got it ({})",
 
         # Status bar
