@@ -57,9 +57,7 @@ class FirstLaunchDialog(QDialog):
         if self._seconds_left <= 0:
             self._timer.stop()
             self.btn_confirm.setEnabled(True)
-            self._update_confirm_text(force_enabled=True)
-        else:
-            self._update_confirm_text()
+        self._update_confirm_text()
 
     def _retranslate(self, _lang=None):
         self.setWindowTitle(i18n.t("welcome_title"))
@@ -68,9 +66,7 @@ class FirstLaunchDialog(QDialog):
 
         self._update_confirm_text()
 
-    def _update_confirm_text(self, force_enabled: bool = False):
-        if force_enabled:
-            self.btn_confirm.setEnabled(True)
+    def _update_confirm_text(self):
         if self.btn_confirm.isEnabled():
             self.btn_confirm.setText(i18n.t("welcome_confirm"))
         else:

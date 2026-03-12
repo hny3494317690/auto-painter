@@ -45,6 +45,7 @@ TRANSLATIONS = {
         ),
         "welcome_hint": "点击下方“我已知晓”后方可继续使用。",
         "welcome_confirm": "我已知晓",
+        # “{}” 占位符会被剩余秒数替换
         "welcome_confirm_countdown": "我已知晓 ({})",
 
         # 状态栏
