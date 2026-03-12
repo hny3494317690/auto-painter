@@ -31,6 +31,21 @@ TRANSLATIONS = {
             "<p>支持多种线稿风格生成，并可自动控制鼠标进行绘画。</p>"
         ),
 
+        # 欢迎/免责声明
+        "welcome_title": "使用须知",
+        "welcome_message": (
+            "<h3>AutoPainter 完全免费、开源</h3>"
+            "<p>本软件无广告、无付费功能。按“原样”提供，不保证适用于所有场景，使用风险由您自行承担，请勿用于非法用途。</p>"
+            "<p><b>快速开始：</b></p>"
+            "<ul>"
+            "<li>可在“设置”中修改绘图快捷键、AI 接口等偏好。</li>"
+            "<li>基本流程：选择图片 → 生成线稿 → 记录画布左上/右下角 → 开始绘画，按停止/中断键可随时终止。</li>"
+            "</ul>"
+        ),
+        "welcome_hint": "点击下方“我已知晓”后方可继续使用。",
+        "welcome_confirm": "我已知晓",
+        "welcome_confirm_countdown": "我已知晓 ({})",
+
         # 状态栏
         "status_ready": "就绪 - 请选择一张图片开始",
         "status_image_loaded": "已加载图片: {}",
@@ -189,6 +204,21 @@ TRANSLATIONS = {
             "<p>Sketch generation and auto-drawing tool.</p>"
             "<p>Supports multiple sketch styles and automated mouse-controlled painting.</p>"
         ),
+
+        # Welcome / disclaimer
+        "welcome_title": "Welcome & Disclaimer",
+        "welcome_message": (
+            "<h3>AutoPainter is free & open source</h3>"
+            "<p>No ads, no paid features. Provided as-is without warranties; use at your own risk and avoid illegal use.</p>"
+            "<p><b>Quick tips:</b></p>"
+            "<ul>"
+            "<li>Adjust drawing hotkeys and AI preferences in Settings.</li>"
+            "<li>Basic flow: choose an image → generate sketch → record canvas top-left/bottom-right → start painting; press Stop/Abort to cancel anytime.</li>"
+            "</ul>"
+        ),
+        "welcome_hint": "Please confirm below to continue using the app.",
+        "welcome_confirm": "Got it",
+        "welcome_confirm_countdown": "Got it ({})",
 
         # Status bar
         "status_ready": "Ready - Please select an image to start",

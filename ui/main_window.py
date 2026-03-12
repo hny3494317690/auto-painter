@@ -4,7 +4,7 @@
 import os
 from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
-    QSplitter, QAction, QActionGroup, QMessageBox, QSystemTrayIcon, QStyle
+    QSplitter, QAction, QActionGroup, QMessageBox, QSystemTrayIcon, QStyle, QDialog
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
@@ -12,7 +12,8 @@ from PyQt5.QtGui import QIcon
 from ui.control_panel import ControlPanel
 from ui.preview_panel import PreviewPanel
 from ui.history_manager import HistoryPanel
-from ui.settings_dialog import SettingsDialog
+from ui.settings_dialog import SettingsDialog, load_settings, save_settings
+from ui.first_launch_dialog import FirstLaunchDialog, NOTICE_VERSION
 from ui.styles import GLOBAL_STYLE
 from ui.i18n import i18n
 
@@ -31,6 +32,7 @@ class MainWindow(QMainWindow):
         self._init_ui()
         self._init_statusbar()
         self._init_tray()
+        self._notice_checked = False
 
         # 监听语言变化
         i18n.language_changed.connect(self._retranslate)
@@ -238,3 +240,24 @@ class MainWindow(QMainWindow):
         """设置保存后刷新控制面板的热键。"""
         self.control_panel._refresh_hotkeys()
         self.statusBar().showMessage(i18n.t("settings_saved"))
+
+    # ──────────── 启动提示 ────────────
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        if not self._notice_checked:
+            self._notice_checked = True
+            self._show_first_launch_notice()
+
+    def _show_first_launch_notice(self):
+        settings = load_settings()
+        if settings.get("notice_ack_version") == NOTICE_VERSION:
+            return
+
+        dlg = FirstLaunchDialog(self)
+        result = dlg.exec_()
+        if result == QDialog.Accepted:
+            settings["notice_ack_version"] = NOTICE_VERSION
+            save_settings(settings)
+        else:
+            self.close()
