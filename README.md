@@ -37,7 +37,7 @@ AutoPainter Win 是一个基于 PyQt5 的桌面应用，用于将图片转换为
 ## 环境要求
 
 - Python 3.9+
-- Windows（自动绘画相关能力面向 Windows 使用场景）
+- Windows / macOS
 
 依赖见 `requirements.txt`：
 
@@ -45,12 +45,27 @@ AutoPainter Win 是一个基于 PyQt5 的桌面应用，用于将图片转换为
 - opencv-python
 - numpy
 - pyautogui
+- pynput（macOS/Linux 用于全局热键监听）
+- Pillow（作为高版本 Python 的 OpenCV 兼容降级依赖）
+
+### Python 版本说明
+
+- Python 3.9–3.12：默认使用 OpenCV，效果最好、速度最快。
+- Python 3.13+：OpenCV 可能不可用，本项目会自动切换到纯 Python 图像处理（依赖 Pillow）。
+  该模式可运行但效果和性能会略弱。
 
 ## 安装
 
 ```bash
 pip install -r requirements.txt
 ```
+
+## macOS 说明
+
+- 首次运行时需要在 **系统设置 → 隐私与安全性** 中给 Python/Terminal 授权：
+  - **辅助功能**（用于控制鼠标）
+  - **输入监控**（用于全局热键）
+- 若热键无响应，请重新打开应用或终端，让系统重新加载权限。
 
 ## 运行
 
