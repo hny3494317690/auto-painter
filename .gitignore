@@ -220,4 +220,5 @@ out_sketch/
 history/
 settings.json
 
-.DS_Store
+# macOS
+**/.DS_Store
