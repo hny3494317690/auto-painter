@@ -39,7 +39,7 @@ jobs:
       - name: Build (macOS arm64)
         if: runner.os == 'macOS'
         run: |
-          pyinstaller --windowed --name=auto-painter-mac main.py
+          pyinstaller --windowed --icon=./assets/LOGO.ico --name=auto-painter-mac main.py
           ditto -c -k --sequesterRsrc --keepParent dist/auto-painter-mac.app dist/auto-painter-mac-arm64.zip
 
       - name: Create Release
